@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Agregar factura · Water Controller Smart</title>
+  <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body data-pagina="factura" data-titulo="Agregar factura" data-subtitulo="Escribe los datos de tu factura de agua">
+  <main id="contenido">
+    <section class="grid2">
+
+      <!-- Formulario: factura.js se lo envía a Python para que lo revise -->
+      <form class="tarjeta formulario" id="formulario">
+        <h3>Datos de la factura</h3>
+        <label class="campo">Mes de la factura
+          <input type="month" name="mes" required>
+        </label>
+        <label class="campo">Consumo (m³)
+          <input type="number" name="consumo" step="0.1" min="0" placeholder="Ej: 14" required>
+        </label>
+        <label class="campo">Total a pagar ($)
+          <input type="number" name="total" step="1" min="0" placeholder="Ej: 85400" required>
+        </label>
+        <p class="mensaje" id="mensaje"></p>
+        <div><button class="boton">Guardar factura</button></div>
+      </form>
+
+      <!-- Facturas guardadas -->
+      <article class="tarjeta">
+        <h3>Facturas guardadas</h3>
+        <table class="tabla">
+          <thead><tr><th>Mes</th><th>Consumo</th><th>Total</th><th></th></tr></thead>
+          <tbody id="lista"></tbody>
+        </table>
+      </article>
+
+    </section>
+  </main>
+
+  <script src="js/almacen.js"></script>
+  <script src="js/calculos.js"></script>
+  <script src="js/menu.js"></script>
+  <script src="js/factura.js"></script>
+</body>
+</html>

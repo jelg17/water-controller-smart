@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Configuración de alertas · Water Controller Smart</title>
+  <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body data-pagina="configuracion" data-titulo="Configuración de alertas" data-subtitulo="Define cuánta agua quieres gastar al mes">
+  <main id="contenido">
+    <form class="tarjeta formulario" id="formulario">
+      <h3>Límites de consumo</h3>
+      <label class="campo">Límite mensual (m³)
+        <input type="number" name="mensual" min="1" step="0.5" required>
+      </label>
+      <label class="campo">Avisarme cuando llegue a este % del límite
+        <input type="number" name="aviso" min="1" max="100" step="5" required>
+      </label>
+      <p class="mensaje" id="mensaje"></p>
+      <div><button class="boton">Guardar cambios</button></div>
+    </form>
+  </main>
+
+  <script src="js/almacen.js"></script>
+  <script src="js/calculos.js"></script>
+  <script src="js/graficas.js"></script>
+  <script src="js/menu.js"></script>
+  <script src="js/configuracion.js"></script>
+</body>
+</html>

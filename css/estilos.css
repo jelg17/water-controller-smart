@@ -1,0 +1,78 @@
+/* ===== Colores y medidas (el semáforo es el del documento del proyecto) ===== */
+:root {
+  --azul-oscuro: #0c4a6e; --azul: #0284c7; --azul-claro: #94c7e8;
+  --verde: #28a745; --amarillo: #ffc107; --rojo: #dc3545;
+  --fondo: #f1f5f9; --blanco: #fff; --texto: #0f172a; --suave: #64748b; --borde: #e2e8f0;
+}
+
+/* ===== Base ===== */
+* { box-sizing: border-box; }
+body { margin: 0; font-family: Roboto, "Open Sans", system-ui, sans-serif; color: var(--texto); background: var(--fondo); }
+h1, h2, h3, p { margin: 0; }
+a { color: var(--azul); text-decoration: none; }
+.suave { color: var(--suave); font-size: 13px; }
+
+/* ===== Login ===== */
+.login { display: grid; grid-template-columns: 42% 1fr; min-height: 100vh; }
+.login-marca { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+               padding: 40px; text-align: center; color: var(--blanco); background: var(--azul-oscuro); }
+.login-form { display: grid; align-content: center; gap: 12px; width: 100%; max-width: 380px; margin: auto; padding: 24px; }
+
+/* ===== Menú lateral y contenido ===== */
+.app { display: grid; grid-template-columns: 200px 1fr; min-height: 100vh; }
+.menu { position: sticky; top: 0; display: flex; flex-direction: column; gap: 4px; height: 100vh; padding: 16px 12px;
+        color: var(--azul-claro); background: var(--azul-oscuro); }
+.menu-marca { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; font-size: 13px; font-weight: 700; color: var(--blanco); }
+.menu a { padding: 10px 12px; border-radius: 8px; font-size: 14px; color: var(--azul-claro); }
+.menu a.activo { color: var(--blanco); background: var(--azul); }
+.menu-usuario { margin-top: auto; font-size: 13px; color: var(--blanco); word-break: break-all; }
+.encabezado { padding: 20px 28px 8px; }
+.encabezado h1 { font-size: 22px; }
+#contenido { display: grid; align-content: start; gap: 16px; padding: 8px 28px 28px; }
+
+/* ===== Piezas ===== */
+.logo { display: grid; place-items: center; flex: none; width: 34px; height: 34px; border-radius: 50%; background: var(--azul); }
+.logo svg { width: 18px; fill: var(--blanco); }
+.tarjeta { padding: 16px; border: 1px solid var(--borde); border-radius: 12px; background: var(--blanco); }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.dato { display: block; margin: 4px 0; font-size: 26px; font-weight: 700; }
+
+.boton { padding: 11px 18px; border: 0; border-radius: 8px; font: inherit; font-weight: 600; color: var(--blanco); background: var(--azul); cursor: pointer; }
+.campo { display: grid; gap: 6px; font-size: 13px; font-weight: 600; }
+.campo input { width: 100%; padding: 10px 12px; border: 1px solid var(--borde); border-radius: 8px; font: inherit; }
+.formulario { display: grid; gap: 12px; max-width: 460px; }
+.mensaje { min-height: 18px; font-size: 13px; color: var(--suave); }
+
+.alerta { padding: 12px 16px; border-radius: 10px; color: #842029; background: #f8d7da; border: 1px solid #f1aeb5; }
+.alerta.aviso { color: #664d03; background: #fff3cd; border-color: #ffe69c; }
+.alerta.ok { color: #0f5132; background: #d1e7dd; border-color: #a3cfbb; }
+
+.tabla { width: 100%; border-collapse: collapse; font-size: 13px; }
+.tabla th { font-weight: 500; text-align: left; color: var(--suave); }
+.tabla th, .tabla td { padding: 9px 6px; border-bottom: 1px solid var(--borde); }
+.etiqueta { padding: 2px 10px; border-radius: 99px; font-size: 12px; }
+.etiqueta.normal { color: #0f5132; background: #d1e7dd; }
+.etiqueta.precaucion { color: #664d03; background: #fff3cd; }
+.etiqueta.exceso { color: #842029; background: #f8d7da; }
+.color-normal { color: var(--verde); } .color-precaucion { color: #b8860b; } .color-exceso { color: var(--rojo); }
+
+.vacio { padding: 28px; text-align: center; color: var(--suave); }
+code { padding: 2px 6px; border-radius: 4px; background: #e2e8f0; }
+
+/* Gráficas */
+.grafica { width: 100%; height: auto; }
+.grafica text { font-size: 10px; fill: var(--suave); }
+.grafica .limite { stroke: var(--rojo); stroke-dasharray: 4 4; }
+
+/* Pantallas pequeñas */
+@media (max-width: 800px) {
+  .login, .app, .grid3, .grid2 { grid-template-columns: 1fr; }
+  .menu { position: static; flex-direction: row; flex-wrap: wrap; align-items: center; height: auto; }
+  .menu-marca { margin: 0 auto 0 0; }
+  .menu-usuario { display: none; }
+}
+
+/* Mensaje de error del formulario y botón de borrar */
+.mensaje.error { color: var(--rojo); }
+.borrar { border: 0; font: inherit; color: var(--rojo); background: none; cursor: pointer; }
