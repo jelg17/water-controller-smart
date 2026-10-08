@@ -19,7 +19,7 @@ import re
 import webbrowser
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 
-PUERTO = 8000
+PUERTO = 7500
 CARPETA = os.path.dirname(os.path.abspath(__file__))   # la carpeta donde está este archivo
 
 
