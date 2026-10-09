@@ -76,3 +76,12 @@ code { padding: 2px 6px; border-radius: 4px; background: #e2e8f0; }
 /* Mensaje de error del formulario y botón de borrar */
 .mensaje.error { color: var(--rojo); }
 .borrar { border: 0; font: inherit; color: var(--rojo); background: none; cursor: pointer; }
+
+
+
+/* Registro de actividades y cronómetro (panel) */
+.acciones { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+.boton.detener { background: var(--rojo); }
+.reloj { font-variant-numeric: tabular-nums; font-size: 34px; }
+.campo select { width: 100%; padding: 10px 12px; border: 1px solid var(--borde); border-radius: 8px; font: inherit; background: var(--blanco); }
+.tarjeta .formulario { max-width: none; }

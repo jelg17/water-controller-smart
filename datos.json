@@ -1,0 +1,37 @@
+{
+  "actividades": [
+    {
+      "id": 1,
+      "actividad": "platos",
+      "nombre": "Lavado de platos",
+      "fecha": "2026-10-09",
+      "hora": "05:12:22",
+      "minutos": 5.0,
+      "caudal": 6.0,
+      "caudal_personalizado": false,
+      "litros": 30.0,
+      "tiempo_recomendado": 10,
+      "ahorro_litros": 0.0,
+      "origen": "manual",
+      "mensaje": "Lavado de platos: gastaste 30,0 L (5 min a 6,0 L/min). Estás dentro del tiempo recomendado (10 min)."
+    },
+    {
+      "id": 2,
+      "actividad": "ducha",
+      "nombre": "Ducha",
+      "fecha": "2026-10-09",
+      "hora": "05:12:33",
+      "minutos": 0.55,
+      "caudal": 9.0,
+      "caudal_personalizado": false,
+      "litros": 4.95,
+      "tiempo_recomendado": 5,
+      "ahorro_litros": 0.0,
+      "origen": "cronometro",
+      "mensaje": "Ducha: gastaste 5,0 L (0,55 min a 9,0 L/min). Estás dentro del tiempo recomendado (5 min)."
+    }
+  ],
+  "caudales": {},
+  "cronometro": null,
+  "siguiente_id": 3
+}
