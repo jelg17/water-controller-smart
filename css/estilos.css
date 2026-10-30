@@ -15,7 +15,7 @@ a { color: var(--azul); text-decoration: none; }
 /* ===== Login ===== */
 .login { display: grid; grid-template-columns: 42% 1fr; min-height: 100vh; }
 .login-marca { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
-               padding: 40px; text-align: center; color: var(--blanco); background: var(--azul-oscuro); }
+              padding: 40px; text-align: center; color: var(--blanco); background: var(--azul-oscuro); }
 .login-form { display: grid; align-content: center; gap: 12px; width: 100%; max-width: 380px; margin: auto; padding: 24px; }
 
 /* ===== Menú lateral y contenido ===== */
