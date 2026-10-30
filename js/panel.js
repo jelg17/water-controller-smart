@@ -100,16 +100,41 @@
   function dibujarResumen() {
     const hoy = estado.hoy;
     const ultima = hoy.actividades[hoy.actividades.length - 1];
+    const meta = estado.meta_diaria;
+    const porcentaje = hoy.porcentaje_meta;
+    let aviso = "";
+
+    if (hoy.meta_superada) {
+      aviso = '<div class="alerta">Has alcanzado o superado tu meta diaria.</div>';
+    } else if (hoy.meta_cercana) {
+      aviso = '<div class="alerta aviso">Atencion: estas cerca de tu meta diaria.</div>';
+    } else {
+      aviso = '<div class="alerta ok">Vas dentro de tu meta diaria.</div>';
+    }
+
     document.getElementById("resumen").innerHTML =
       '<article class="tarjeta"><span class="suave">Consumo de hoy</span>' +
         '<strong class="dato">' + litros(hoy.total_litros) + '</strong>' +
-        '<p class="suave">Suma de todas las actividades del día</p></article>' +
+        '<p class="suave">Consumo acumulado del dia</p></article>' +
+
       '<article class="tarjeta"><span class="suave">Actividades de hoy</span>' +
         '<strong class="dato">' + hoy.cantidad + '</strong>' +
-        '<p class="suave">Registradas con cronómetro o minutos</p></article>' +
-      '<article class="tarjeta"><span class="suave">Última actividad</span>' +
-        '<strong class="dato">' + (ultima ? ultima.nombre : "—") + '</strong>' +
-        '<p class="suave">' + (ultima ? litros(ultima.litros) + " · " + ultima.hora.slice(0, 5) : "Aún no hay registros") + '</p></article>';
+        '<p class="suave">Actividades registradas</p></article>' +
+
+      '<article class="tarjeta"><span class="suave">Ultima actividad</span>' +
+        '<strong class="dato">' + (ultima ? ultima.nombre : "Sin registros") + '</strong>' +
+        '<p class="suave">' +
+          (ultima ? litros(ultima.litros) + " - " + ultima.hora.slice(0, 5) : "Aun no hay registros") +
+        '</p></article>' +
+
+      '<article class="tarjeta"><span class="suave">Meta diaria</span>' +
+        '<strong class="dato">' + litros(meta) + '</strong>' +
+        '<p class="suave">Consumo: ' + litros(hoy.total_litros) + '</p>' +
+        '<p class="suave">Cumplimiento: ' + porcentaje + '%</p>' +
+        '<progress max="100" value="' + Math.min(porcentaje, 100) +
+          '" style="width:100%"></progress>' +
+        aviso +
+      '</article>';
   }
 
   function dibujarTabla() {

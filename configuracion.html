@@ -6,29 +6,107 @@
   <title>Configuración de alertas · Water Controller Smart</title>
   <link rel="stylesheet" href="css/estilos.css">
 </head>
-<body data-pagina="configuracion" data-titulo="Configuración de alertas" data-subtitulo="Define cuánta agua quieres gastar al mes">
+
+<body
+  data-pagina="configuracion"
+  data-titulo="Configuración de alertas"
+  data-subtitulo="Personaliza tus límites y hábitos de consumo de agua"
+>
   <main id="contenido">
+
+    <!-- Configuración del límite mensual -->
     <form class="tarjeta formulario" id="formulario">
-      <h3>Límites de consumo</h3>
-      <label class="campo">Límite mensual (m³)
-        <input type="number" name="mensual" min="1" step="0.5" required>
+      <h3>Límites de consumo mensual</h3>
+
+      <label class="campo">
+        Límite mensual (m³)
+        <input
+          type="number"
+          name="mensual"
+          min="1"
+          step="0.5"
+          required
+        >
       </label>
-      <label class="campo">Avisarme cuando llegue a este % del límite
-        <input type="number" name="aviso" min="1" max="100" step="5" required>
+
+      <label class="campo">
+        Avisarme cuando llegue a este % del límite
+        <input
+          type="number"
+          name="aviso"
+          min="1"
+          max="100"
+          step="5"
+          required
+        >
       </label>
+
       <p class="mensaje" id="mensaje"></p>
-      <div><button class="boton">Guardar cambios</button></div>
+
+      <div>
+        <button class="boton" type="submit">
+          Guardar cambios
+        </button>
+      </div>
     </form>
-        <!-- Caudal de cada actividad: configuracion.js se lo envía a Python -->
+
+    <!-- US-007: Personalización del caudal y tiempo recomendado -->
     <form class="tarjeta formulario" id="formCaudales">
-      <h3>Caudal de cada actividad</h3>
-      <p class="suave">Litros por minuto de tu grifo o ducha. Si no lo cambias, se usa el valor estándar.</p>
-      <div class="formulario" id="caudales"></div>
+      <h3>Personalizar actividades</h3>
+
+      <p class="suave">
+        Ajusta los litros por minuto de tu grifo o ducha y el tiempo
+        recomendado para cada actividad. Si no personalizas los valores,
+        se utilizarán los valores estándar del catálogo.
+      </p>
+
+      <div class="formulario" id="caudales">
+        <!-- Los campos se generan desde configuracion.js -->
+      </div>
+
       <p class="mensaje" id="mensajeCaudales"></p>
-      <div><button class="boton">Guardar caudales</button></div>
+
+      <div>
+        <button class="boton" type="submit">
+          Guardar configuración de actividades
+        </button>
+      </div>
     </form>
+
+    <!-- US-008: Configuración de la meta diaria -->
+    <form class="tarjeta formulario" id="formMetaDiaria">
+      <h3>Meta diaria de consumo</h3>
+
+      <p class="suave">
+        Define el máximo de litros que quieres consumir al día.
+        La aplicación utilizará esta meta para evaluar tu consumo
+        acumulado y avisarte cuando te acerques al límite.
+      </p>
+
+      <label class="campo" for="metaDiaria">
+        Límite diario (litros)
+        <input
+          type="number"
+          id="metaDiaria"
+          name="meta_diaria"
+          min="0.01"
+          step="0.01"
+          required
+        >
+      </label>
+
+      <p class="mensaje" id="mensajeMetaDiaria"></p>
+
+      <div>
+        <button class="boton" type="submit">
+          Guardar meta diaria
+        </button>
+      </div>
+    </form>
+
   </main>
 
+  <!-- Scripts existentes -->
   <script src="js/almacen.js"></script>
   <script src="js/calculos.js"></script>
   <script src="js/graficas.js"></script>
