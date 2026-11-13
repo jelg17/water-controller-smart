@@ -1,112 +1,176 @@
 # Water Controller Smart
 
-Aplicación web para controlar el consumo de agua del hogar. Cada persona crea su
-cuenta, registra sus actividades (ducha, lavado de platos, riego, aseo o las que
-ella misma cree), y la app calcula los litros gastados, avisa cuando se pasa del
-tiempo recomendado o de su meta diaria, y muestra un historial con estadísticas.
+Aplicación web para el monitoreo y control del consumo de agua. Permite a cada
+usuario registrar sus actividades de consumo, calcular los litros utilizados,
+definir una meta diaria y recibir alertas, tanto en la aplicación como por correo
+electrónico, cuando el consumo supera los valores recomendados.
 
-Está hecha con **Python (Flask)** y **SQLite**, con páginas HTML y JavaScript
-sencillo, sin frameworks de frontend.
+## Contenido
 
-## Qué puede hacer
+1. [Funcionalidades](#funcionalidades)
+2. [Tecnologías](#tecnologías)
+3. [Requisitos](#requisitos)
+4. [Instalación y ejecución](#instalación-y-ejecución)
+5. [Configuración](#configuración)
+6. [Estructura del proyecto](#estructura-del-proyecto)
+7. [Base de datos](#base-de-datos)
+8. [API](#api)
+9. [Seguridad](#seguridad)
+10. [Limitaciones conocidas](#limitaciones-conocidas)
+11. [Versión anterior](#versión-anterior)
 
-| Historia | Qué hace |
-|---|---|
-| US-001 | Registrar actividades con cronómetro o escribiendo los minutos |
-| US-002 | Calcular el consumo en litros (minutos × caudal) |
-| US-003 | Detectar excesos de tiempo y de consumo diario (Normal, Precaución, Exceso) |
-| US-004 | Alertas en la web y por correo electrónico |
-| US-005 y US-006 | Historial, estadísticas, comparativas, ahorro potencial y exportar CSV |
-| US-007 | Personalizar caudal y tiempo recomendado de cada actividad |
-| US-008 | Configurar la meta diaria y el porcentaje de aviso |
-| Extra | Crear actividades propias, con su nombre, caudal y tiempo recomendado |
+## Funcionalidades
 
-## Cómo usarlo
+- **Registro de actividades.** Mediante cronómetro o ingresando la duración en
+  minutos (US-001).
+- **Cálculo del consumo.** Litros consumidos a partir de la duración y el caudal de
+  cada actividad (US-002).
+- **Detección de excesos.** Marca las actividades que superan el tiempo recomendado
+  y clasifica el consumo diario como Normal, Precaución o Exceso (US-003).
+- **Alertas.** Notificaciones en la interfaz web y por correo electrónico (US-004).
+- **Historial y reportes.** Consulta por periodo, gráficas de consumo, comparación
+  con el periodo anterior, ahorro potencial y exportación a CSV (US-005 y US-006).
+- **Personalización.** Caudal y tiempo recomendado ajustables por actividad
+  (US-007).
+- **Meta diaria.** Límite de consumo y porcentaje de aviso configurables
+  (US-008).
+- **Actividades propias.** Además de las actividades predeterminadas (ducha, lavado
+  de platos, riego y aseo), cada usuario puede crear las suyas indicando nombre,
+  caudal y tiempo recomendado. Se pueden editar y eliminar; los registros históricos
+  se conservan.
 
-Necesitas Python 3.9 o superior.
+## Tecnologías
 
-1. Instala las dependencias:
+- Python con Flask
+- SQLite (módulo estándar `sqlite3`)
+- HTML, CSS y JavaScript sin frameworks de frontend
+- SMTP para el envío de correos
+
+## Requisitos
+
+- Python 3.9 o superior
+- Las dependencias de `requirements.txt` (Flask y python-dotenv)
+- Una cuenta en un servicio SMTP, solo si se desea el envío de alertas por correo
+
+## Instalación y ejecución
+
+1. Clonar el repositorio:
+
+       git clone https://github.com/jelg17/water-controller-smart.git
+       cd water-controller-smart
+
+2. Instalar las dependencias:
 
        pip install -r requirements.txt
 
-2. (Opcional) Configura el correo para las alertas. Mira la sección
-   [Alertas por correo](#alertas-por-correo). Sin esto la app funciona igual,
-   pero los correos no se envían.
+3. Configurar las variables de entorno (ver [Configuración](#configuración)).
 
-3. Inicia la app:
+4. Iniciar la aplicación:
 
        python app.py
 
-4. Se abre el navegador en http://localhost:7500. Crea una cuenta, registra una
-   actividad en el panel y revisa el historial.
+La aplicación queda disponible en http://localhost:7500. Para detenerla, presionar
+`Ctrl + C`. La base de datos `water.db` se crea automáticamente en el primer
+arranque.
 
-Para apagar el servidor: `Ctrl + C`.
+## Configuración
 
-## Actividades propias
+La configuración se realiza con variables de entorno, que pueden definirse en un
+archivo `.env` ubicado junto a `app.py`. El repositorio incluye `.env.example` como
+plantilla.
 
-En **Configuración → Crear actividad propia** puedes agregar actividades que no
-estén en la lista, por ejemplo "Lavar el carro". Se les pone nombre, caudal
-(L/min) y tiempo recomendado (minutos). Después aparecen en el cronómetro y en el
-selector del panel, y se pueden editar o eliminar desde la misma pantalla.
-Al eliminar una actividad, el historial conserva sus registros.
+| Variable | Descripción | Obligatoria |
+|---|---|---|
+| `WCS_SMTP_SERVIDOR` | Servidor SMTP, por ejemplo `smtp-relay.brevo.com` | Solo para correo |
+| `WCS_SMTP_PUERTO` | `587` (STARTTLS, valor por defecto) o `465` (SSL) | No |
+| `WCS_SMTP_USUARIO` | Usuario o login SMTP | Solo para correo |
+| `WCS_SMTP_CLAVE` | Contraseña o clave SMTP | Solo para correo |
+| `WCS_SMTP_REMITENTE` | Dirección de remitente, verificada en el servicio SMTP. Si no se define, se usa el usuario | No |
+| `WCS_SECRET_KEY` | Llave con la que se firman las sesiones. Si no se define, se genera una al iniciar y las sesiones se cierran con cada reinicio | Recomendada |
 
-Cada usuario solo ve sus propias actividades, hasta un máximo de 20.
+Si el servicio de correo no está configurado, la aplicación funciona con normalidad:
+las alertas se registran y se muestran en la web, y el envío del correo queda
+marcado como fallido.
 
-## Alertas por correo
+El archivo `.env` contiene credenciales. Está incluido en `.gitignore` y no debe
+subirse al repositorio.
 
-El correo se configura con variables de entorno, nunca dentro del código.
-Copia `.env.example` como `.env` y llénalo:
+### Alertas por correo
 
-    WCS_SMTP_SERVIDOR=smtp-relay.brevo.com
-    WCS_SMTP_PUERTO=587
-    WCS_SMTP_USUARIO=tu-usuario-smtp
-    WCS_SMTP_CLAVE=tu-clave-smtp
-    WCS_SMTP_REMITENTE=correo-verificado-en-el-servicio
+Se envía correo cuando el consumo del día alcanza el porcentaje de aviso de la meta
+diaria (alerta preventiva) o la supera (alerta correctiva). Las alertas por exceso
+de tiempo en una actividad se muestran únicamente en la interfaz web. Todas las
+alertas quedan almacenadas y pueden consultarse en la sección Alertas.
 
-Funciona con cualquier servicio SMTP (Brevo, Gmail con contraseña de aplicación,
-Mailtrap para pruebas, etc.). El archivo `.env` está en `.gitignore`: **no lo
-subas a GitHub**, porque contiene la clave.
+## Estructura del proyecto
 
-Se envía correo cuando el consumo del día llega al porcentaje de aviso de la meta
-o la supera. Las alertas por exceso de tiempo en una actividad se muestran solo en
-la web. Si el correo falla, la alerta queda guardada de todos modos y se ve en la
-pestaña **Alertas**.
-
-## Cómo está organizado
-
-    app.py                 servidor Flask: rutas, cálculos, validaciones y alertas
-    db.py                  base de datos SQLite (tablas y consultas)
-    correo.py              envío de correos por SMTP
-    requirements.txt       dependencias de Python
-    .env.example           plantilla de la configuración del correo
-    water.db               base de datos (se crea sola, no se sube a GitHub)
-    templates/             páginas HTML (login, registro, panel, historial,
-                           configuración y alertas)
-    static/css/estilos.css estilos
-    static/js/panel.js     panel: cronómetro, registro y resumen del día
-    static/js/historial.js historial, estadísticas y exportar CSV
-    static/js/configuracion.js  meta diaria, caudales, tiempos y actividades propias
-    static/js/alertas.js   lista de alertas
-    static/js/graficas.js  gráficas SVG
-    static/js/menu.js      menú lateral
+    app.py                     Servidor Flask: rutas, cálculos, validaciones y alertas
+    db.py                      Acceso a la base de datos SQLite
+    correo.py                  Envío de correos por SMTP
+    requirements.txt           Dependencias de Python
+    .env.example               Plantilla de configuración
+    templates/                 Páginas HTML (login, registro, panel, historial,
+                               configuración y alertas)
+    static/css/estilos.css     Estilos
+    static/js/panel.js         Cronómetro, registro y resumen del día
+    static/js/historial.js     Historial, estadísticas y exportación CSV
+    static/js/configuracion.js Meta diaria, caudales, tiempos y actividades propias
+    static/js/alertas.js       Listado de alertas
+    static/js/graficas.js      Gráficas SVG
+    static/js/menu.js          Menú lateral
 
 ## Base de datos
 
-SQLite, en el archivo `water.db`. Todas las tablas de datos guardan el `usuario_id`,
-así cada persona solo ve y modifica lo suyo:
+SQLite, almacenada en `water.db`. Todas las tablas de datos incluyen `usuario_id`,
+por lo que cada usuario accede únicamente a su propia información.
 
-    usuarios ──< configuracion               meta diaria y % de aviso
-             ──< personalizaciones           caudal y tiempo propios de actividades estándar
-             ──< actividades_personalizadas  actividades creadas por el usuario
-             ──< cronometros                 cronómetro en marcha (máximo uno)
-             ──< actividades                 registros de consumo
-             ──< alertas                     alertas generadas
+    usuarios ──< configuracion               Meta diaria y porcentaje de aviso
+             ──< personalizaciones           Caudal y tiempo de actividades predeterminadas
+             ──< actividades_personalizadas  Actividades creadas por el usuario
+             ──< cronometros                 Cronómetro en marcha (máximo uno)
+             ──< actividades                 Registros de consumo
+             ──< alertas                     Alertas generadas
 
-Las contraseñas se guardan solo como hash, nunca en texto.
+## API
+
+Todas las rutas requieren una sesión iniciada. Sin sesión responden `401`.
+
+| Método | Ruta | Descripción |
+|---|---|---|
+| GET | `/api/estado` | Catálogo de actividades, cronómetro y resumen del día |
+| GET | `/api/historial` | Historial y estadísticas por periodo |
+| GET | `/api/alertas` | Alertas del usuario |
+| POST | `/api/cronometro/iniciar` | Inicia el cronómetro de una actividad |
+| POST | `/api/cronometro/detener` | Detiene el cronómetro y registra la actividad |
+| POST | `/api/actividad` | Registra una actividad con su duración en minutos |
+| POST | `/api/caudal` | Guarda el caudal de una actividad |
+| POST | `/api/tiempo-recomendado` | Guarda el tiempo recomendado de una actividad |
+| POST | `/api/meta-diaria` | Guarda la meta diaria |
+| POST | `/api/porcentaje-aviso` | Guarda el porcentaje de aviso |
+| POST | `/api/actividad-personalizada` | Crea una actividad propia |
+| POST | `/api/actividad-personalizada/eliminar` | Elimina una actividad propia |
+
+## Seguridad
+
+- Las contraseñas se almacenan únicamente como hash.
+- Cada consulta y modificación se limita al usuario con sesión iniciada.
+- Las credenciales del servicio de correo se leen de variables de entorno y no
+  forman parte del código ni del repositorio.
+- Las actividades propias se eliminan de forma lógica, de modo que el historial
+  conserva el nombre con el que fueron registradas.
+
+## Limitaciones conocidas
+
+- La aplicación se ejecuta con el servidor de desarrollo de Flask y escucha solo en
+  `127.0.0.1`. Para un despliegue en producción se requiere un servidor WSGI y un
+  proxy inverso con HTTPS.
+- SQLite es adecuada para un entorno de un solo servidor y baja concurrencia.
+- El envío de correo no distingue la causa del fallo: ante cualquier error informa
+  que el servicio no respondió.
 
 ## Versión anterior
 
-Antes el proyecto era una maqueta que guardaba facturas en el `localStorage` del
-navegador. Esos archivos siguen en el repositorio pero ya no se usan:
-`servidor.py`, `index.html`, `factura.html`, `datos.json` y los scripts
-`almacen.js`, `calculos.js`, `factura.js` y `login.js`.
+El proyecto inició como una maqueta que almacenaba facturas en el `localStorage`
+del navegador. Los siguientes archivos pertenecen a esa versión, permanecen en el
+repositorio y ya no se utilizan: `servidor.py`, `index.html`, `factura.html`,
+`datos.json`, `almacen.js`, `calculos.js`, `factura.js` y `login.js`.
