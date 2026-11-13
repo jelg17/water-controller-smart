@@ -46,6 +46,8 @@
         '<div><button class="boton">Guardar actividad</button></div></form>' +
     '</section>' +
     '<section class="grid3" id="resumen"></section>' +
+    '<section class="grid2" id="logros"></section>' +
+    '<article class="tarjeta" id="semana"></article>' +
     '<article class="tarjeta"><h3>Actividades de hoy</h3><div id="tabla"></div></article>';
 
   const zonaResultado = document.getElementById("resultado");
@@ -187,6 +189,105 @@
                '<td>' + (a.exceso_tiempo ? '<span class="etiqueta exceso">Exceso de tiempo</span>' : '<span class="etiqueta normal">Normal</span>') + '</td></tr>';
       }).join("") + '</tbody></table>';
   }
+  
+  /** Racha, insignias y consejos de ahorro: los calcula Python (logros.py) y llegan por /api/logros. */
+  function dibujarLogros(datos) {
+    document.getElementById("logros").innerHTML =
+      '<article class="tarjeta"><h3>Racha y logros</h3>' +
+        '<div class="racha">' +
+          '<div><strong class="dato" id="rachaActual"></strong><span class="suave">días seguidos dentro de tu meta</span></div>' +
+          '<div><strong class="dato" id="mejorRacha"></strong><span class="suave">mejor racha</span></div>' +
+        '</div>' +
+        '<div class="insignias" id="insignias"></div></article>' +
+      '<article class="tarjeta"><h3>Consejos para ti</h3><ul class="consejos" id="consejos"></ul></article>';
+
+    document.getElementById("rachaActual").textContent = "🔥 " + datos.racha_actual;
+    document.getElementById("mejorRacha").textContent = "🏆 " + datos.mejor_racha;
+
+    // textContent en todo: los nombres nunca se interpretan como HTML
+    datos.insignias.forEach(function (i) {
+      const caja = document.createElement("div");
+      const icono = document.createElement("span");
+      const nombre = document.createElement("strong");
+      const progreso = document.createElement("span");
+      caja.className = "insignia" + (i.obtenida ? "" : " bloqueada");
+      caja.title = i.descripcion;
+      icono.className = "icono";
+      icono.textContent = i.icono;
+      nombre.textContent = i.nombre;
+      progreso.className = "suave";
+      progreso.textContent = i.obtenida ? "¡Lograda!" : i.progreso + " / " + i.objetivo;
+      caja.append(icono, nombre, document.createElement("br"), progreso);
+      document.getElementById("insignias").append(caja);
+    });
+
+    datos.consejos.forEach(function (c) {
+      const item = document.createElement("li");
+      item.textContent = c.icono + " " + c.texto;
+      document.getElementById("consejos").append(item);
+    });
+  }
+
+  function cargarLogros() {
+    pedir("/api/logros").then(function (respuesta) {
+      if (respuesta.ok) dibujarLogros(respuesta);
+    }).catch(function () { /* si falla, el resto del panel sigue funcionando */ });
+  }
+
+  /** Resumen de los últimos 7 días (lo calcula Python en /api/resumen-semanal) y botón para recibirlo por correo. */
+  function dibujarSemana(r) {
+    const zona = document.getElementById("semana");
+
+    if (r.sin_datos) {
+      zona.innerHTML = '<h3>Tu semana</h3><p class="suave">Aún no hay actividades en los últimos 7 días.</p>';
+      return;
+    }
+
+    zona.innerHTML =
+      '<h3>Tu semana</h3>' +
+      '<p class="suave" id="semRango"></p>' +
+      '<div class="racha">' +
+        '<div><strong class="dato" id="semTotal"></strong><span class="suave" id="semVar"></span></div>' +
+        '<div><strong class="dato" id="semProm"></strong><span class="suave">promedio diario</span></div>' +
+        '<div><strong class="dato" id="semDias"></strong><span class="suave">días dentro de tu meta</span></div>' +
+      '</div>' +
+      '<p class="suave" id="semMejor"></p>' +
+      '<div class="acciones"><button class="boton" id="enviarResumen">✉️ Enviarme el resumen por correo</button></div>' +
+      '<p class="mensaje" id="resumenMsg"></p>';
+
+    document.getElementById("semRango").textContent = r.desde + " al " + r.hasta;
+    document.getElementById("semTotal").textContent = litros(r.total_litros);
+    document.getElementById("semVar").textContent = r.variacion === null
+      ? "sin semana anterior para comparar"
+      : (r.variacion > 0 ? "▲ +" : "▼ ") + coma(r.variacion) + "% vs semana anterior";
+    document.getElementById("semProm").textContent = litros(r.promedio_diario);
+    document.getElementById("semDias").textContent = r.dias_en_meta + " de " + r.dias_con_registros;
+    document.getElementById("semMejor").textContent = r.mejor_dia
+      ? "Mejor día: " + r.mejor_dia.etiqueta + " (" + litros(r.mejor_dia.litros) + ")" +
+        (r.actividad_top ? " · Lo que más agua usó: " + r.actividad_top.nombre + " (" + r.actividad_top.porcentaje + "%)" : "")
+      : "";
+
+    const boton = document.getElementById("enviarResumen");
+    const msg = document.getElementById("resumenMsg");
+    boton.addEventListener("click", function () {
+      boton.disabled = true;
+      msg.className = "mensaje";
+      msg.textContent = "Enviando...";
+      pedir("/api/resumen-semanal/enviar", {}).then(function (res) {
+        msg.textContent = res.ok ? "Listo: te enviamos el resumen a tu correo." : res.error;
+        msg.className = "mensaje" + (res.ok ? "" : " error");
+      }).catch(function () {
+        msg.textContent = "No se pudo conectar con Python.";
+        msg.className = "mensaje error";
+      }).then(function () { boton.disabled = false; });
+    });
+  }
+
+  function cargarSemana() {
+    pedir("/api/resumen-semanal").then(function (respuesta) {
+      if (respuesta.ok) dibujarSemana(respuesta);
+    }).catch(function () { /* si falla, el resto del panel sigue funcionando */ });
+  }
 
   function dibujarTodo() {
     dibujarSelector();
@@ -199,6 +300,8 @@
     return pedir("/api/estado").then(function (respuesta) {
       estado = respuesta;
       dibujarTodo();
+      cargarLogros();
+      cargarSemana();   // se agregó: resumen de la semana
     }).catch(sinConexion);
   }
 

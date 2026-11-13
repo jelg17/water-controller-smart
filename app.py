@@ -33,6 +33,8 @@ from dotenv import load_dotenv
 
 import db
 from correo import enviar_correo
+import logros
+import resumen_semanal
 
 load_dotenv()   # lee el archivo .env y carga las variables WCS_SMTP_*
 
@@ -435,6 +437,7 @@ def generar_alertas(usuario, registro, hoy):
                 usuario["correo"],
                 "Water Controller Smart: alerta de consumo",
                 mensaje,
+                nivel,
             )
             estado_correo = "enviado" if enviado else "fallido"
             db.actualizar_correo_alerta(
@@ -909,6 +912,34 @@ def accion_eliminar_actividad(usuario, cuerpo):
     return {"ok": True}
 
 
+# ---------- Resumen semanal ----------
+
+def accion_enviar_resumen(usuario, _cuerpo):
+    """Se implementó el envío del resumen semanal al correo del usuario."""
+    datos = db.cargar_datos(usuario["id"])
+    resumen = resumen_semanal.calcular_resumen(
+        datos["actividades"], meta_diaria_de(datos)
+    )
+
+    if resumen["sin_datos"]:
+        return {
+            "ok": False,
+            "error": "Aún no tienes actividades en los últimos 7 días.",
+        }
+
+    enviado, error = enviar_correo(
+        usuario["correo"],
+        "Water Controller Smart: tu resumen semanal",
+        resumen_semanal.construir_texto(resumen),
+        html=resumen_semanal.construir_html(resumen),
+    )
+
+    if not enviado:
+        return {"ok": False, "error": f"No se pudo enviar el correo: {error}"}
+
+    return {"ok": True}
+
+
 # ---------- Inicio de sesión ----------
 
 def login_requerido(vista):
@@ -1063,6 +1094,26 @@ def api_alertas():
         "alertas": db.listar_alertas(g.usuario["id"]),
     })
 
+@app.get("/api/logros")
+@login_requerido
+def api_logros():
+    datos = db.cargar_datos(g.usuario["id"])
+    return jsonify(logros.resumen(
+        datos["actividades"],
+        meta_diaria_de(datos),
+        porcentaje_aviso_de(datos),
+    ))
+
+
+@app.get("/api/resumen-semanal")
+@login_requerido
+def api_resumen_semanal():
+    datos = db.cargar_datos(g.usuario["id"])
+    resumen = resumen_semanal.calcular_resumen(
+        datos["actividades"], meta_diaria_de(datos)
+    )
+    return jsonify({"ok": True, **resumen})
+
 
 def ruta_post(ruta, accion):
     """Registra una ruta POST que recibe JSON y responde JSON."""
@@ -1087,6 +1138,7 @@ RUTAS_POST = {
     "/api/porcentaje-aviso": accion_guardar_porcentaje_aviso,
     "/api/actividad-personalizada": accion_crear_actividad,
     "/api/actividad-personalizada/eliminar": accion_eliminar_actividad,
+    "/api/resumen-semanal/enviar": accion_enviar_resumen,
 }
 
 for _ruta, _accion in RUTAS_POST.items():

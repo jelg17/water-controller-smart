@@ -85,3 +85,14 @@ code { padding: 2px 6px; border-radius: 4px; background: #e2e8f0; }
 .reloj { font-variant-numeric: tabular-nums; font-size: 34px; }
 .campo select { width: 100%; padding: 10px 12px; border: 1px solid var(--borde); border-radius: 8px; font: inherit; background: var(--blanco); }
 .tarjeta .formulario { max-width: none; }
+
+
+
+/* Racha, insignias y consejos (panel) */
+.racha { display: flex; gap: 28px; flex-wrap: wrap; }
+.insignias { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; margin-top: 12px; }
+.insignia { padding: 10px 6px; border: 1px solid var(--borde); border-radius: 10px; text-align: center; font-size: 12px; background: var(--blanco); }
+.insignia .icono { display: block; font-size: 26px; }
+.insignia.bloqueada { opacity: .45; filter: grayscale(1); }
+.consejos { display: grid; gap: 10px; margin: 10px 0 0; padding: 0; list-style: none; }
+.consejos li { padding: 10px 12px; border-radius: 10px; font-size: 14px; line-height: 1.4; background: var(--fondo); }
