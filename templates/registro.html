@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Crear cuenta · Water Controller Smart</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+</head>
+<body>
+  <div class="login">
+    <aside class="login-marca">
+      <h2>Water Controller Smart</h2>
+      <p>Conoce tu consumo de agua de un vistazo y controla cuánto gastas cada mes.</p>
+    </aside>
+
+    <!-- Se creó esta pantalla para registrar usuarios nuevos: Python guarda el correo y el hash de la contraseña -->
+    <form class="login-form" id="formulario" method="post" action="{{ url_for('registro') }}">
+      <h2>Crea tu cuenta</h2>
+      <p class="suave">Con tu cuenta tus actividades y configuración quedan guardadas solo para ti.</p>
+      {% if error %}<div class="alerta">{{ error }}</div>{% endif %}
+      <label class="campo">Correo electrónico
+        <input type="email" id="correo" name="correo" value="{{ correo }}" placeholder="nombre@correo.com" required>
+      </label>
+      <label class="campo">Contraseña (mínimo 6 caracteres)
+        <input type="password" name="contrasena" minlength="6" placeholder="••••••••" required>
+      </label>
+      <label class="campo">Repite la contraseña
+        <input type="password" name="repetida" minlength="6" placeholder="••••••••" required>
+      </label>
+      <button class="boton">Crear cuenta</button>
+      <p class="suave">¿Ya tienes cuenta? <a href="{{ url_for('login') }}">Iniciar sesión</a></p>
+    </form>
+  </div>
+
+</body>
+</html>

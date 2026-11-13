@@ -1,38 +1,59 @@
 /* configuracion.js
    Configuración mensual, caudal y tiempo recomendado por actividad,
-   y meta diaria de consumo.
+   meta diaria de consumo y creación de actividades propias.
 */
 
 /* ----- Configuración del límite mensual ----- */
+/* Se cambió: el límite mensual en m³ pertenecía a las facturas y se eliminó.
+   Este bloque ahora guarda en SQLite (vía Python) el % de aviso de la meta diaria. */
 (function () {
   const formulario = document.getElementById("formulario");
   const mensaje = document.getElementById("mensaje");
 
-  // Cargar los límites guardados localmente.
-  const limites = Almacen.obtenerLimites();
-  formulario.mensual.value = limites.mensual;
-  formulario.aviso.value = limites.aviso;
+  // Cargar el porcentaje de aviso guardado en el servidor.
+  fetch("/api/estado")
+    .then(function (respuesta) { return respuesta.json(); })
+    .then(function (estado) {
+      if (estado.porcentaje_aviso !== undefined) {
+        formulario.aviso.value = estado.porcentaje_aviso;
+      }
+    })
+    .catch(function () {
+      mensaje.textContent = "No se pudo cargar el porcentaje de aviso.";
+      mensaje.className = "mensaje error";
+    });
 
   formulario.addEventListener("submit", function (evento) {
     evento.preventDefault();
 
-    const mensual = parseFloat(formulario.mensual.value);
     const aviso = parseInt(formulario.aviso.value, 10);
 
-    if (!(mensual > 0) || !(aviso >= 1 && aviso <= 100)) {
+    if (!(aviso >= 1 && aviso <= 100)) {
       mensaje.textContent =
-        "El límite debe ser mayor que cero y el porcentaje estar entre 1 y 100.";
+        "El porcentaje debe estar entre 1 y 100.";
       mensaje.className = "mensaje error";
       return;
     }
 
-    Almacen.guardarLimites({
-      mensual: mensual,
-      aviso: aviso
-    });
-
-    mensaje.textContent = "Límites guardados.";
-    mensaje.className = "mensaje";
+    fetch("/api/porcentaje-aviso", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ porcentaje_aviso: aviso })
+    })
+      .then(function (respuesta) { return respuesta.json(); })
+      .then(function (resultado) {
+        if (resultado.ok) {
+          mensaje.textContent = "Porcentaje de aviso guardado.";
+          mensaje.className = "mensaje";
+        } else {
+          mensaje.textContent = resultado.error;
+          mensaje.className = "mensaje error";
+        }
+      })
+      .catch(function () {
+        mensaje.textContent = "No se pudo conectar con Python.";
+        mensaje.className = "mensaje error";
+      });
   });
 })();
 
@@ -65,6 +86,9 @@
           const id = String(actividad.id);
           const nombre = String(actividad.nombre);
 
+          // true si la creó el usuario (no viene del catálogo estándar).
+          const esPropia = actividad.propia === true;
+
           const caudal = Number(actividad.caudal);
           const caudalEstandar = Number(actividad.caudal_estandar);
 
@@ -82,12 +106,20 @@
 
           return `
             <div class="tarjeta">
-              <h4>${escaparHTML(nombre)}</h4>
+              <h4>
+                ${escaparHTML(nombre)}
+                ${esPropia
+                  ? `<button type="button" class="boton detener"
+                       data-eliminar="${escaparHTML(id)}">Eliminar</button>`
+                  : ""}
+              </h4>
 
               <label class="campo" for="caudal_${indice}">
                 Caudal personalizado (L/min)
                 <span class="suave">
-                  Estándar: ${caudalEstandar} L/min
+                  ${esPropia
+                    ? "Actividad propia"
+                    : "Estándar: " + caudalEstandar + " L/min"}
                 </span>
                 <input
                   type="number"
@@ -103,7 +135,9 @@
               <label class="campo" for="tiempo_${indice}">
                 Tiempo recomendado (minutos)
                 <span class="suave">
-                  Estándar: ${tiempoEstandar} minutos
+                  ${esPropia
+                    ? "Actividad propia"
+                    : "Estándar: " + tiempoEstandar + " minutos"}
                 </span>
                 <input
                   type="number"
@@ -126,13 +160,13 @@
       })
       .catch(function () {
         mostrar(
-          "No se pudo conectar con Python. Ejecuta: python servidor.py",
+          "No se pudo conectar con Python. Ejecuta: python app.py",
           true
         );
       });
   }
 
-  // Evita interpretar los nombres del catálogo como HTML.
+  // Evita interpretar los nombres de las actividades como HTML.
   function escaparHTML(valor) {
     return String(valor).replace(/[&<>"']/g, function (caracter) {
       return {
@@ -249,6 +283,29 @@
     });
   }
 
+  // Refresca la lista cuando se crea una actividad nueva.
+  document.addEventListener("actividades:cambio", cargar);
+
+  // Botón Eliminar de las actividades propias.
+  lista.addEventListener("click", function (evento) {
+    const boton = evento.target.closest("[data-eliminar]");
+    if (!boton) return;
+
+    if (!confirm("¿Eliminar esta actividad? Tu historial se conserva.")) {
+      return;
+    }
+
+    enviarConfiguracion("/api/actividad-personalizada/eliminar", {
+      actividad: boton.dataset.eliminar
+    }).then(function (resultado) {
+      mostrar(
+        resultado.ok ? "Actividad eliminada." : resultado.error,
+        !resultado.ok
+      );
+      cargar();
+    });
+  });
+
   cargar();
 })();
 
@@ -331,4 +388,43 @@
   });
 
   cargarMeta();
+})();
+
+
+/* ----- Crear actividad propia ----- */
+(function () {
+  const formulario = document.getElementById("formNuevaActividad");
+  const mensaje = document.getElementById("mensajeNuevaActividad");
+
+  function mostrar(texto, esError) {
+    mensaje.textContent = texto;
+    mensaje.className = "mensaje" + (esError ? " error" : "");
+  }
+
+  formulario.addEventListener("submit", function (evento) {
+    evento.preventDefault();
+    mostrar("Creando actividad...", false);
+
+    fetch("/api/actividad-personalizada", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        nombre: formulario.elements["nueva_nombre"].value.trim(),
+        caudal: formulario.elements["nueva_caudal"].value,
+        tiempo_recomendado: formulario.elements["nueva_tiempo"].value
+      })
+    })
+      .then(function (respuesta) { return respuesta.json(); })
+      .then(function (resultado) {
+        if (!resultado.ok) {
+          throw new Error(resultado.error || "No se pudo crear la actividad.");
+        }
+        formulario.reset();
+        mostrar("Actividad creada. Ya la puedes usar en el panel.", false);
+        document.dispatchEvent(new Event("actividades:cambio"));
+      })
+      .catch(function (error) {
+        mostrar(error.message || "No se pudo conectar con Python.", true);
+      });
+  });
 })();

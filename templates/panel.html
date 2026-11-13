@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Panel de control · Water Controller Smart</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+</head>
+<!-- Se agregó data-usuario: Flask escribe aquí el correo de quien inició sesión (lo usa menu.js) -->
+<body data-pagina="panel" data-titulo="Panel de control" data-subtitulo="Resumen de tu consumo diario y tus alertas" data-usuario="{{ correo }}">
+  <main id="contenido">
+    <!-- panel.js llena este espacio -->
+  </main>
+
+  <script src="{{ url_for('static', filename='js/graficas.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/menu.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/panel.js') }}"></script>
+</body>
+</html>

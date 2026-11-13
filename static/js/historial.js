@@ -3,6 +3,8 @@
    - Cambio dinámico de gráfico (Barras / Línea SVG).
    - Comparativa porcentual entre periodos y metas de consumo.
    - Reporte exportable a CSV.
+   Se quitó la tarjeta de facturas mensuales (ya no se suben facturas).
+   Se cambió el límite de 100 L fijo por la meta diaria real del usuario (viene de Python).
 */
 
 (function () {
@@ -10,7 +12,7 @@
 
   contenido.innerHTML =
     '<section class="tarjeta formulario">' +
-      '<h3>Consulta y Filtros de Consumo (US-005)</h3>' +
+      '<h3>Consulta y Filtros de Consumo</h3>' +
       '<div class="grid2" style="align-items:flex-end;">' +
         '<label class="campo">Vistas Rápidas ' +
           '<select id="selVista">' +
@@ -60,11 +62,6 @@
         '<button class="boton" id="btnExportarCSV">📥 Exportar Reporte (CSV)</button>' +
       '</div>' +
       '<div id="tablaHistorial"></div>' +
-    '</article>' +
-
-    '<article class="tarjeta">' +
-      '<h3>Facturas Mensuales de Servicio (m³)</h3>' +
-      '<div id="tablaFacturas"></div>' +
     '</article>';
 
   const selVista = document.getElementById("selVista");
@@ -79,7 +76,6 @@
   const graficoDiario = document.getElementById("graficoDiario");
   const tablaActividades = document.getElementById("tablaActividades");
   const tablaHistorial = document.getElementById("tablaHistorial");
-  const tablaFacturas = document.getElementById("tablaFacturas");
 
   let datosActuales = null;
 
@@ -99,7 +95,11 @@
     }
 
     fetch(url)
-      .then(function (res) { return res.json(); })
+      .then(function (res) {
+        // Se agregó: si la sesión expiró, Flask responde 401 y se vuelve al login
+        if (res.status === 401) { window.location = "/"; }
+        return res.json();
+      })
       .then(function (res) {
         if (!res.ok) return;
         datosActuales = res;
@@ -133,7 +133,8 @@
       '<article class="tarjeta">' +
         '<span class="suave">Cumplimiento de Meta</span>' +
         '<strong class="dato">' + res.cumplimiento_metas.porcentaje + '%</strong>' +
-        '<p class="suave">' + res.cumplimiento_metas.dias_cumplidos + ' de ' + res.dias_totales + ' días en regla (<=100L)</p>' +
+        '<p class="suave">' + res.cumplimiento_metas.dias_cumplidos + ' de ' + res.dias_totales +
+          ' días en regla (<=' + coma(res.cumplimiento_metas.limite_diario) + ' L)</p>' +
       '</article>';
 
     // 2. Consulta Vacía (US-005)
@@ -141,7 +142,6 @@
       graficoDiario.innerHTML = '<div class="vacio">No hay registros de consumo para el rango de fechas seleccionado.</div>';
       tablaActividades.innerHTML = '<div class="vacio">Sin datos.</div>';
       tablaHistorial.innerHTML = '<div class="vacio">No hay actividades registradas en este periodo.</div>';
-      dibujarFacturas();
       return;
     }
 
@@ -169,8 +169,6 @@
     });
     htmlTabla += '</tbody></table>';
     tablaHistorial.innerHTML = htmlTabla;
-
-    dibujarFacturas();
   }
 
   function dibujarGrafico(res) {
@@ -180,22 +178,11 @@
     }
     const tipo = selGrafico.value;
     if (tipo === "linea") {
-      Graficas.linea("#graficoDiario", res.grafico_fechas.valores, res.grafico_fechas.etiquetas, 100);
+      // La línea roja ahora marca la meta diaria real del usuario
+      Graficas.linea("#graficoDiario", res.grafico_fechas.valores, res.grafico_fechas.etiquetas, res.cumplimiento_metas.limite_diario);
     } else {
       Graficas.barras("#graficoDiario", res.grafico_fechas.valores, res.grafico_fechas.etiquetas);
     }
-  }
-
-  function dibujarFacturas() {
-    const facturas = Almacen.listarFacturas();
-    if (facturas.length === 0) {
-      tablaFacturas.innerHTML = '<p class="suave">No hay facturas guardadas en la demostración.</p>';
-      return;
-    }
-    const filas = facturas.slice().reverse().map(function (f) {
-      return '<tr><td>' + Calculos.nombreMes(f.mes) + '</td><td>' + f.consumo_m3 + ' m³</td><td>' + Calculos.pesos(f.total) + '</td></tr>';
-    }).join("");
-    tablaFacturas.innerHTML = '<table class="tabla"><thead><tr><th>Mes</th><th>Consumo</th><th>Total</th></tr></thead><tbody>' + filas + '</tbody></table>';
   }
 
   // Eventos

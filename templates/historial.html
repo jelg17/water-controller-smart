@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Historial y Reportes · Water Controller Smart</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+</head>
+<!-- Se agregó data-usuario: Flask escribe aquí el correo de quien inició sesión (lo usa menu.js) -->
+<body data-pagina="historial" data-titulo="Historial y Reportes de Consumo" data-subtitulo="Analiza las tendencias de consumo, comparativas de ahorro y exporta tus reportes" data-usuario="{{ correo }}">
+  <main id="contenido">
+    <!-- historial.js llena este espacio -->
+  </main>
+
+  <script src="{{ url_for('static', filename='js/graficas.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/menu.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/historial.js') }}"></script>
+</body>
+</html>

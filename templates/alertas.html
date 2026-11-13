@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Alertas · Water Controller Smart</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+</head>
+<!-- Se creó esta página para US-004 (escenario 4): consultar el registro de alertas guardado en SQLite -->
+<body data-pagina="alertas" data-titulo="Registro de alertas" data-subtitulo="Todas las alertas que se generaron para tu cuenta" data-usuario="{{ correo }}">
+  <main id="contenido">
+    <!-- alertas.js llena este espacio -->
+  </main>
+
+  <script src="{{ url_for('static', filename='js/menu.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/alertas.js') }}"></script>
+</body>
+</html>

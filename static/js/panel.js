@@ -3,8 +3,10 @@
    Arriba: registro de actividades (US-001) y consumo del día (US-002).
      - Cronómetro de acceso rápido: un clic inicia y otro clic detiene.
      - Registro manual: actividad + minutos.
-     - Python (servidor.py) valida, calcula los litros y guarda; aquí solo se muestra.
-   Abajo: el resumen de facturas de siempre. */
+     - Python (app.py) valida, calcula los litros y guarda; aquí solo se muestra.
+   Se quitó el resumen de facturas de siempre (ya no se suben facturas).
+   Se implementó US-003 y US-004: el estado del día (Normal / Precaución / Exceso) y las
+   alertas que Python genera al registrar una actividad se muestran como avisos en pantalla. */
 
 (function () {
   const contenido = document.getElementById("contenido");
@@ -18,11 +20,15 @@
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(datos),
     };
-    return fetch(ruta, opciones).then(function (respuesta) { return respuesta.json(); });
+    return fetch(ruta, opciones).then(function (respuesta) {
+      // Se agregó: si la sesión expiró, Flask responde 401 y se vuelve al login
+      if (respuesta.status === 401) { window.location = "/"; }
+      return respuesta.json();
+    });
   }
 
   function sinConexion() {
-    mostrarResultado("No se pudo conectar con Python. Ejecuta: python servidor.py", "error");
+    mostrarResultado("No se pudo conectar con Python. Ejecuta: python app.py", "error");
   }
 
   // ---------- Armado de la pantalla (una sola vez) ----------
@@ -54,6 +60,30 @@
     aviso.className = "alerta" + (tipo === "ok" ? " ok" : "");
     aviso.textContent = texto;            // textContent: el texto nunca se interpreta como HTML
     zonaResultado.append(aviso);
+  }
+
+  /** US-004: dibuja debajo del resultado las alertas que generó Python al registrar. */
+  function mostrarAlertas(alertas) {
+    (alertas || []).forEach(function (alerta) {
+      const aviso = document.createElement("div");
+      aviso.className = "alerta" + (alerta.nivel === "preventiva" ? " aviso" : "");
+      aviso.textContent = alerta.mensaje;
+      zonaResultado.append(aviso);
+
+      // Escenario 3: si el correo falló, el aviso queda visible en el banner de la aplicación
+      if (alerta.correo_estado === "fallido") {
+        const fallo = document.createElement("div");
+        fallo.className = "alerta aviso";
+        fallo.textContent = "No se pudo enviar el correo de esta alerta (" + alerta.correo_error + ") " +
+                            "Te la mostramos aquí y quedó guardada en tu registro de alertas.";
+        zonaResultado.append(fallo);
+      } else if (alerta.correo_estado === "enviado") {
+        const enviado = document.createElement("div");
+        enviado.className = "alerta ok";
+        enviado.textContent = "También te enviamos esta alerta por correo electrónico.";
+        zonaResultado.append(enviado);
+      }
+    });
   }
 
   // ---------- Dibujo de cada parte ----------
@@ -104,12 +134,13 @@
     const porcentaje = hoy.porcentaje_meta;
     let aviso = "";
 
-    if (hoy.meta_superada) {
-      aviso = '<div class="alerta">Has alcanzado o superado tu meta diaria.</div>';
-    } else if (hoy.meta_cercana) {
-      aviso = '<div class="alerta aviso">Atencion: estas cerca de tu meta diaria.</div>';
+    // US-003: el estado del día lo calcula Python (Normal / Precaución / Exceso)
+    if (hoy.estado === "exceso") {
+      aviso = '<div class="alerta">Exceso: superaste tu meta diaria.</div>';
+    } else if (hoy.estado === "precaucion") {
+      aviso = '<div class="alerta aviso">Precaución: estás cerca de tu meta diaria.</div>';
     } else {
-      aviso = '<div class="alerta ok">Vas dentro de tu meta diaria.</div>';
+      aviso = '<div class="alerta ok">Normal: vas dentro de tu meta diaria.</div>';
     }
 
     document.getElementById("resumen").innerHTML =
@@ -131,6 +162,7 @@
         '<strong class="dato">' + litros(meta) + '</strong>' +
         '<p class="suave">Consumo: ' + litros(hoy.total_litros) + '</p>' +
         '<p class="suave">Cumplimiento: ' + porcentaje + '%</p>' +
+        '<p class="suave">Estado: <strong class="color-' + hoy.estado + '">' + hoy.estado_nombre + '</strong></p>' +
         '<progress max="100" value="' + Math.min(porcentaje, 100) +
           '" style="width:100%"></progress>' +
         aviso +
@@ -146,11 +178,13 @@
     }
     document.getElementById("tabla").innerHTML =
       '<table class="tabla"><thead><tr><th>Hora</th><th>Actividad</th><th>Duración</th><th>Caudal</th>' +
-      '<th>Litros</th><th>Podrías ahorrar</th></tr></thead><tbody>' +
+      '<th>Litros</th><th>Podrías ahorrar</th><th>Estado</th></tr></thead><tbody>' +
       actividades.map(function (a) {
         return '<tr><td>' + a.hora.slice(0, 5) + '</td><td>' + a.nombre + '</td><td>' + coma(a.minutos) + ' min</td>' +
                '<td>' + coma(a.caudal) + ' L/min' + (a.caudal_personalizado ? ' ✎' : '') + '</td>' +
-               '<td>' + litros(a.litros) + '</td><td>' + (a.ahorro_litros > 0 ? litros(a.ahorro_litros) : "—") + '</td></tr>';
+               '<td>' + litros(a.litros) + '</td><td>' + (a.ahorro_litros > 0 ? litros(a.ahorro_litros) : "—") + '</td>' +
+               // US-003: se marca la actividad que superó el tiempo recomendado
+               '<td>' + (a.exceso_tiempo ? '<span class="etiqueta exceso">Exceso de tiempo</span>' : '<span class="etiqueta normal">Normal</span>') + '</td></tr>';
       }).join("") + '</tbody></table>';
   }
 
@@ -175,6 +209,7 @@
       return;
     }
     mostrarResultado(respuesta.registro.mensaje + " Consumo de hoy: " + litros(respuesta.hoy.total_litros) + ".", "ok");
+    mostrarAlertas(respuesta.alertas);
   }
 
   // ---------- Eventos ----------
@@ -215,49 +250,5 @@
     }).catch(sinConexion);
   });
 
-  // ---------- Facturas (lo que ya existía) ----------
-  function dibujarFacturas() {
-    const facturas = Almacen.listarFacturas();
-    const limites = Almacen.obtenerLimites();
-
-    if (facturas.length === 0) {
-      contenido.insertAdjacentHTML("beforeend", '<div class="tarjeta vacio">Todavía no hay facturas.<br>' +
-        '<a href="factura.html">Agrega tu primera factura</a> para ver el resumen mensual.</div>');
-      return;
-    }
-
-    const ultima = facturas[facturas.length - 1];
-    const estadoFactura = Calculos.estado(ultima.consumo_m3, limites);
-    const mes = Calculos.nombreMes(ultima.mes);
-
-    let alerta = '<div class="alerta ok">Tu último consumo está dentro del límite.</div>';
-    if (estadoFactura.clase === "exceso") {
-      alerta = '<div class="alerta">Superaste tu límite en ' + mes + ': ' + ultima.consumo_m3 + ' m³ de ' + limites.mensual + ' m³.</div>';
-    } else if (estadoFactura.clase === "precaucion") {
-      alerta = '<div class="alerta aviso">En ' + mes + ' ya vas en ' + Math.round(estadoFactura.porcentaje) + '% de tu límite mensual.</div>';
-    }
-
-    contenido.insertAdjacentHTML("beforeend", alerta +
-      '<section class="grid3">' +
-        '<article class="tarjeta"><span class="suave">Último consumo</span>' +
-          '<strong class="dato">' + ultima.consumo_m3 + ' m³</strong><p class="suave">' + mes + '</p></article>' +
-        '<article class="tarjeta"><span class="suave">Promedio mensual</span>' +
-          '<strong class="dato">' + Calculos.promedio(facturas).toFixed(1) + ' m³</strong><p class="suave">De ' + facturas.length + ' facturas</p></article>' +
-        '<article class="tarjeta"><span class="suave">Estado de la meta</span>' +
-          '<strong class="dato color-' + estadoFactura.clase + '">' + estadoFactura.nombre + '</strong>' +
-          '<p class="suave">' + Math.round(estadoFactura.porcentaje) + '% de tu límite de ' + limites.mensual + ' m³</p></article>' +
-      '</section>' +
-      '<section class="grid2">' +
-        '<article class="tarjeta"><h3>Consumo mensual (m³)</h3><p class="suave">La línea roja es tu límite</p><div id="g1"></div></article>' +
-        '<article class="tarjeta"><h3>Valor de cada factura (miles de $)</h3><div id="g2"></div></article>' +
-      '</section>');
-
-    const ultimas = facturas.slice(-6);
-    const etiquetas = ultimas.map(function (f) { return f.mes.slice(2); });
-    Graficas.linea("#g1", ultimas.map(function (f) { return f.consumo_m3; }), etiquetas, limites.mensual);
-    Graficas.barras("#g2", ultimas.map(function (f) { return f.total / 1000; }), etiquetas);
-  }
-
-  dibujarFacturas();
   cargarEstado();
 })();

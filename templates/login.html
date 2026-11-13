@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Iniciar sesión · Water Controller Smart</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+</head>
+<body>
+  <div class="login">
+    <aside class="login-marca">
+      <h2>Water Controller Smart</h2>
+      <p>Conoce tu consumo de agua de un vistazo y controla cuánto gastas cada mes.</p>
+    </aside>
+
+    <!-- Se cambió el formulario: ahora se envía a Flask (POST /) y Python revisa el usuario en SQLite -->
+    <form class="login-form" id="formulario" method="post" action="{{ url_for('login') }}">
+      <h2>Bienvenido de nuevo</h2>
+      <p class="suave">Ingresa tus credenciales para ver tu panel de consumo.</p>
+      {% if error %}<div class="alerta">{{ error }}</div>{% endif %}
+      <label class="campo">Correo electrónico
+        <input type="email" id="correo" name="correo" value="{{ correo }}" placeholder="nombre@correo.com" required>
+      </label>
+      <label class="campo">Contraseña
+        <input type="password" name="contrasena" placeholder="••••••••" required>
+      </label>
+      <button class="boton">Iniciar sesión</button>
+      <p class="suave">¿No tienes cuenta? <a href="{{ url_for('registro') }}">Crear cuenta</a></p>
+    </form>
+  </div>
+
+</body>
+</html>

@@ -4,33 +4,25 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Configuración de alertas · Water Controller Smart</title>
-  <link rel="stylesheet" href="css/estilos.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
 </head>
 
 <body
   data-pagina="configuracion"
   data-titulo="Configuración de alertas"
   data-subtitulo="Personaliza tus límites y hábitos de consumo de agua"
+  data-usuario="{{ correo }}"
 >
   <main id="contenido">
 
     <!-- Configuración del límite mensual -->
+    <!-- Se quitó el límite mensual en m³ (dependía de las facturas). Se dejó el porcentaje de aviso:
+         ahora indica desde qué % de la meta diaria se muestra la precaución (US-003) y se envía la alerta preventiva (US-004) -->
     <form class="tarjeta formulario" id="formulario">
-      <h3>Límites de consumo mensual</h3>
+      <h3>Aviso de precaución</h3>
 
       <label class="campo">
-        Límite mensual (m³)
-        <input
-          type="number"
-          name="mensual"
-          min="1"
-          step="0.5"
-          required
-        >
-      </label>
-
-      <label class="campo">
-        Avisarme cuando llegue a este % del límite
+        Avisarme cuando llegue a este % de la meta diaria
         <input
           type="number"
           name="aviso"
@@ -73,6 +65,40 @@
       </div>
     </form>
 
+        <!-- Actividades propias del usuario -->
+    <form class="tarjeta formulario" id="formNuevaActividad">
+      <h3>Crear actividad propia</h3>
+
+      <p class="suave">
+        ¿Haces algo que no está en la lista (lavar el carro, llenar la piscina...)?
+        Créala con su nombre, caudal y tiempo recomendado.
+      </p>
+
+      <label class="campo" for="nuevaNombre">
+        Nombre
+        <input type="text" id="nuevaNombre" name="nueva_nombre"
+               maxlength="40" required>
+      </label>
+
+      <label class="campo" for="nuevaCaudal">
+        Caudal (L/min)
+        <input type="number" id="nuevaCaudal" name="nueva_caudal"
+               min="0.01" max="200" step="0.01" required>
+      </label>
+
+      <label class="campo" for="nuevaTiempo">
+        Tiempo recomendado (minutos)
+        <input type="number" id="nuevaTiempo" name="nueva_tiempo"
+               min="0.01" max="1440" step="0.01" required>
+      </label>
+
+      <p class="mensaje" id="mensajeNuevaActividad"></p>
+
+      <div>
+        <button class="boton" type="submit">Crear actividad</button>
+      </div>
+    </form>
+
     <!-- US-008: Configuración de la meta diaria -->
     <form class="tarjeta formulario" id="formMetaDiaria">
       <h3>Meta diaria de consumo</h3>
@@ -107,10 +133,8 @@
   </main>
 
   <!-- Scripts existentes -->
-  <script src="js/almacen.js"></script>
-  <script src="js/calculos.js"></script>
-  <script src="js/graficas.js"></script>
-  <script src="js/menu.js"></script>
-  <script src="js/configuracion.js"></script>
+  <script src="{{ url_for('static', filename='js/graficas.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/menu.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/configuracion.js') }}"></script>
 </body>
 </html>
